@@ -109,13 +109,12 @@ struct RadioSettings
         bool,   "unknown_offset524",1,  // 524
         bool,   "chfree_indication_tone",   1,  // 523
         bool,   "password_and_lock_enable", 1,  // 522
-        bool,   "unknown_offset521", 1,
-        bool,   "talk_permit_tone", 1));// 520
+        uint,   "talk_permit_tone", 2));// 520-521
 
     // byte 0x42
     mixin(bitfields!(
         uint,   "unknown_offset532",4,  // 532-535 -- unknown (padding?)
-        bool,   "intro_screen",     1,  // 531
+        bool,   "intro_graphic",     1,  // 531
         bool,   "keypad_tones",     1,  // 530
         uint,   "unknown_offset528",2));// 528-529
 
@@ -181,7 +180,7 @@ struct RadioSettings
     {
         lut["monitor_type"]     = [ 0: "silent", 1: "open" ];
         lut["talk_permit_tone"] = [ 0: "none", 1: "digital", 2: "analog", 3: "both" ];
-        lut["intro_screen"]     = [ 0: "charstrings", 1: "picture" ];
+        //lut["intro_screen"]     = [ 0: "charstrings", 1: "picture" ];
         lut["keypad_lock_time"] = [ 1: "5 sec", 2: "10 sec", 3: "15 sec", 255: "manual" ];
         lut["chan_display_mode"]= [ 0: "MR", 255: "CH" ];
 
@@ -228,25 +227,41 @@ struct RadioSettings
         transform_in["scan_analog_hangtime"] = (y) => round(y/5);
     }
 
-    auto get(string field)
+    T get(T)(string field)
     {
-        uint val;
-        // TODO: replace with mixin template
+        /// BUG: Need *_password, which are ubyte[4]
+        enum FIELDS = [ "disable_all_leds", "monitor_type", "talk_permit_tone",
+                        "radio_dmr_id",
+                        "tx_preamble", "group_call_hangtime", "private_call_hangtime", "vox_sensitivity",
+                        "rx_lowbat_interval", "call_alert_tone",
+                        "loneworker_resp_time", "loneworker_reminder_time", "scan_digital_hangtime", "scan_analog_hangtime", "keypad_lock_time",
+                        "chan_display_mode"];
+        uint val;   // should this be T val; ?
+
         GetterSwitch:
         switch (field)
         {
-            static foreach(prop; ["tx_preamble", "group_call_hangtime", "private_call_hangtime", "rx_lowbat_interval", "call_alert_tone", "scan_digital_hangtime", "scan_analog_hangtime"] ) {
+            static foreach(prop; FIELDS ) {
                 mixin("case \"" ~ prop ~ "\": val = this." ~ prop ~ "; break GetterSwitch;");
             }
             default:
                 val = 0;
+                assert(0);  // This is to prevent subtle bugs, but I need a better error handler
         }
         
         //auto val = __traits(getMember, this, field);
+        static if(is(T == real)) {
         if (field in transform_out)
             return transform_out[field](val);
-        else
-            return val;
+        }
+        else static if(is(T == string)) {
+        if (field in lut)
+            return lut[field][val]; // could be subtle bug with val=0 if field value not retrieved in the switch(field) above
+        }
+        
+        // Should not reach here
+        // (means template instantiated with wrong type)
+        assert(0);
     }
 }
 

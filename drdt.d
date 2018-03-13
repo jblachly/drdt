@@ -54,8 +54,11 @@ int main(string[] args) {
 
     writeln("Now trying getters / setters:");
     writeln("scan_digital_hangtime: ", datafile.settings.description["scan_digital_hangtime"]);
-    writeln("scan_digital_hangtime: ", datafile.settings.get("scan_digital_hangtime"));
+    writeln("scan_digital_hangtime: ", datafile.settings.get!real("scan_digital_hangtime"));
 
+    writeln("Talk permit tone: ", datafile.settings.get!string("talk_permit_tone"));
+    writeln("Keypad lock time: ", datafile.settings.get!string("keypad_lock_time"));
+    
     writeln("Text messages:");
     foreach(tm; datafile.textmessages.save) {
         writeln(tm);
