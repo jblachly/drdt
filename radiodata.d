@@ -25,7 +25,7 @@ class Table(T)
 
         this.rows.length = max_records; // Forces reallocation (and copy if applic)
     }
-/*
+    /*
     this(T: Table!TextMessage)(int max_records)
     {
         writeln("Constructor specialized");
@@ -75,8 +75,8 @@ class Table(T)
 /**
  * RadioSettings struct is a memory map of radio settings from radio codeplug
  *
-// settings,fields_settings.csv,1,8805,144,255,0,255
-// raw codeplug (.bin): starts at 8256 (0x2040)
+ * settings,fields_settings.csv,1,8805,144,255,0,255
+ * raw codeplug (.bin): starts at 8256 (0x2040)
 */
 struct RadioSettings
 {
@@ -263,88 +263,112 @@ struct ChannelInformation
         return ((cast(ubyte*)&this)[deletion_marker_offset] == this.deletion_marker);
     }
 
-    align(1):    
-    mixin(bitfields!(
-        bool, "lone_worker",    1,  // 0
-        bool, "unknown_offset1",1,  // 1 -- unk
-        bool, "squelch",        1,  // 2
-        bool, "autoscan",       1,  // 3
-        bool, "bandwidth",      1,  // 4
-        bool, "unknown_offset5",1,  // 5 -- unk
+    align(1):
+    // Bitfields are allocated from LSB, so these are broken into groups of 8 bits for clarity
+    // byte 0x00
+    mixin(bitfields!(               // bit offset numbering from MSB (i.e. from beginning of memory)
         uint, "channel_mode",   2,  // 6-7
+        bool, "unknown_offset5",1,  // 5 -- unk
+        bool, "bandwidth",      1,  // 4
+        bool, "autoscan",       1,  // 3
+        bool, "squelch",        1,  // 2
+        bool, "unknown_offset1",1,  // 1 -- unk
+        bool, "lone_worker",    1));// 0
 
-        uint, "color_code",     4,  // 8-11
-        uint, "time_slot",      2,  // 12-13
-        bool, "rx_only",        1,  // 14
+    // byte 0x01
+    mixin(bitfields!(
         bool, "allow_talkaround",1, // 15
+        bool, "rx_only",        1,  // 14
+        uint, "time_slot",      2,  // 12-13
+        uint, "color_code",     4));// 8-11
 
-        bool, "data_call_conf", 1,  // 16
-        bool, "private_call_conf",1,// 17
-        uint, "privacy",        2,  // 18-19
+    // byte 0x02
+    mixin(bitfields!(
         uint, "privacy_no",     4,  // 20-23
+        uint, "privacy",        2,  // 18-19
+        bool, "private_call_conf",1,// 17
+        bool, "data_call_conf", 1));// 16
 
-        bool, "display_ptt_id", 1,          // 24
-        bool, "compressed_udp_header",  1,  // 25
-        uint, "unknown_off_26_27",      2,  // 26-27 -- unknown
-        bool, "emergency_alarm_ack",    1,  // 28
-        bool, "unknown_offset29",       1,  // 29 -- unknown
+    // byte 0x03
+    mixin(bitfields!(
         uint, "rx_ref_frequency",       2,  // 30-31
+        bool, "unknown_offset29",       1,  // 29 -- unknown
+        bool, "emergency_alarm_ack",    1,  // 28
+        uint, "unknown_off_26_27",      2,  // 26-27 -- unknown
+        bool, "compressed_udp_header",  1,  // 25
+        bool, "display_ptt_id", 1));        // 24
 
-        uint, "admit_criteria",     2,  // 32
-        bool, "power",              1,  // 34
-        bool, "vox",                1,  // 35
-        bool, "qt_reverse",         1,  // 36
-        bool, "reverse_burst",      1,  // 37
+    // byte 0x04
+    mixin(bitfields!(
         uint, "tx_ref_frequency",   2,  // 38-39
+        bool, "reverse_burst",      1,  // 37
+        bool, "qt_reverse",         1,  // 36
+        bool, "vox",                1,  // 35
+        bool, "power",              1,  // 34
+        uint, "admit_criteria",     2));// 32
 
-        char, "unknown_offset40",   8,  // 40-47
+    // byte 0x05
+    ubyte unknown_offset40;             // 40-47
 
-        uint, "contact_name_id",       16, // 48-63     -- refers to entry in contacts table
-    ));
-
+    // bytes 0x06-0x07
+    ushort contact_name_id;             // 48-63 -- refers to entry in contacts table
+    
+    // byte 0x08
     mixin(bitfields!(
-        uint, "unknown_offset64_65",2,  // 64-65 -- unknown
         uint, "timeout_time",       6,  // 66-71
+        uint, "unknown_offset64_65",2));// 64-65 -- unknown
 
-        uint, "tot_rekey_delay",    8,  // 72-79
+    // byte 0x09
+    ubyte tot_rekey_delay;              // 72-79
 
-        uint, "unknown_offset80_81",2,  // 80-81 -- unknown
+    // byte 0x0a
+    mixin(bitfields!(
         uint, "emergency_system",   6,  // 82-87
+        uint, "unknown_offset80_81",2));// 80-81 -- unknown
 
-        uint, "scan_list",          8,  // 88-95
+    // byte 0x0b
+    ubyte scan_list;                    // 88-95 -- Foreign key 
 
-        uint, "group_list",         8,  // 96-103
+    // byte 0x0c
+    ubyte group_list;                   // 96-103 -- Foreign key
 
-        uint, "unknown_offset104",  8,  // 104-111
+    // byte 0x0d
+    ubyte unknown_offset104;            // 104-111
 
-        uint, "decode18",           8,  // 112-119
+    // byte 0x0e
+    ubyte decode18;                     // 112-119
 
-        uint, "unknown_offset120",  8));// 120-127
+    // byte 0x0f
+    ubyte unknown_offset120;            // 120-127
 
+    // bytes 0x10-0x13, 0x14-0x17 (32 bits each)
+    uint rx_frequency;                  // 128-159  -- BCD encoded
+    uint tx_frequency;                  // 160-191  -- BCD encoded
+
+    // bytes 0x18-19, 0x1a-1b (16 bits each)
+    ushort ctcss_dcs_decode;            // 192-207  -- BCDT encoded
+    ushort ctcss_dcs_encode;            // 208-223  -- BCDT encoded
+
+    // byte 0x1c
     mixin(bitfields!(
-        uint, "rx_frequency",       32, // 128-159
-        uint, "tx_frequency",       32)); // 160-191
-    
+        uint, "rx_signaling_system",   3,   // 229-231
+        uint, "unknown_offset224_228", 5)); // 224-228  -- padding?
+
+    // byte 0x1d
     mixin(bitfields!(
-        uint, "ctcss_dcs_decode",   16, // 192-207
-        uint, "ctcss_dcs_encode",   16, // 208-223
+        uint, "tx_signaling_system",   3,   // 237-239
+        uint, "unknown_offset232_236", 5)); // 232-236  -- padding?
 
-        uint, "unknown_offset224_228",  5,  // 224-228  -- padding?
-        uint, "rx_signaling_system", 3,     // 229-231
-
-        uint, "unknown_offset232_236",  5,  // 232-236  -- padding?
-        uint, "tx_signaling_system", 3,     // 237-239
-
-        uint, "unknown_offset240_255", 16));// 240-255
+    // bytes 0x1e-1f
+    ushort unknown_offset240_255;           // 240-255
     
-    
+    // bytes 0x20-3f (wchar = 2 octets)
     wchar[16] channel_name;
 
-    string toString() {
+    string toString() const {
         return channel_name.to!string;
     }
 }
-
 
 static this()
 {
@@ -356,4 +380,12 @@ static this()
     static assert(ZoneInfo.sizeof == 64);
     static assert(ScanList.sizeof == 104);
     static assert(ChannelInformation.sizeof == 64);
+
+    static assert(__traits(isPOD, RadioSettings));
+    static assert(__traits(isPOD, TextMessage));
+    static assert(__traits(isPOD, ContactInformation));
+    static assert(__traits(isPOD, RxGroup));
+    static assert(__traits(isPOD, ZoneInfo));
+    static assert(__traits(isPOD, ScanList));
+    static assert(__traits(isPOD, ChannelInformation));
 }
