@@ -7,7 +7,7 @@ import std.getopt;
 
 import std.math : round, quantize;
 
-import witchcraft;
+//import witchcraft;
 
 // http://forum.dlang.org/thread/eiquqszzycomrcazcfsb@forum.dlang.org
 // http://www.iz2uuf.net/wp/index.php/2016/06/04/tytera-dm380-codeplug-binary-format/
@@ -232,32 +232,16 @@ struct RadioSettings
     {
         uint val;
         // TODO: replace with mixin template
+        GetterSwitch:
         switch (field)
         {
-            case "tx_preamble":
-                val = this.tx_preamble;
-                break;
-            case "group_call_hangtime":
-                val = this.group_call_hangtime;
-                break;
-            case "private_call_hangtime":
-                val = this.private_call_hangtime;
-                break;
-            case "rx_lowbat_interval":
-                val = this.rx_lowbat_interval;
-                break;
-            case "call_alert_tone":
-                val = this.call_alert_tone;
-                break;
-            case "scan_digital_hangtime":
-                val = this.scan_digital_hangtime;
-                break;
-            case "scan_analog_hangtime":
-                val = this.scan_analog_hangtime;
-                break;
+            static foreach(prop; ["tx_preamble", "group_call_hangtime", "private_call_hangtime", "rx_lowbat_interval", "call_alert_tone", "scan_digital_hangtime", "scan_analog_hangtime"] ) {
+                mixin("case \"" ~ prop ~ "\": val = this." ~ prop ~ "; break GetterSwitch;");
+            }
             default:
                 val = 0;
         }
+        
         //auto val = __traits(getMember, this, field);
         if (field in transform_out)
             return transform_out[field](val);
