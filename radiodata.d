@@ -209,14 +209,16 @@ struct RadioSettings
         min["scan_analog_hangtime"] = 25;
         max["scan_analog_hangtime"] = 500;
 
-        transform_out["tx_preamble"] = (x) => x*60;
-        transform_out["group_call_hangtime"] = (x) => x*100;
-        transform_out["private_call_hangtime"] = (x) => x*100;
-        transform_out["rx_lowbat_interval"] = (x) => x*5;
-        transform_out["call_alert_tone"] = (x) => x*5;
-        transform_out["scan_digital_hangtime"] = (x) => x*5;
-        transform_out["scan_analog_hangtime"] = (x) => x*5;
-        
+        enum XFORM_OUT = [  ["tx_preamble", "(x) => x*60;"],
+                            ["group_call_hangtime", "(x) => x*100;"],
+                            ["private_call_hangtime", "(x) => x*100;"],
+                            ["rx_lowbat_interval", "(x) => x*5;"],
+                            ["call_alert_tone", "(x) => x*5;"],
+                            ["scan_digital_hangtime", "(x) => x*5;"],
+                            ["scan_analog_hangtime", "(x) => x*5;"] ];
+        static foreach(xform; XFORM_OUT) {
+            mixin("transform_out[\"" ~ xform[0] ~ "\"] = " ~ xform[1]);
+        }
 
         transform_in["tx_preamble"] = (y) => round(y/60);
         transform_in["group_call_hangtime"] = (y) => round(y/100).quantize(5.0L);
