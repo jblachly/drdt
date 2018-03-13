@@ -52,6 +52,10 @@ int main(string[] args) {
     writeln("info1     : ", datafile.settings.info1.to!string);
     writeln("info2     : ", datafile.settings.info2.to!string);
 
+    writeln("Now trying getters / setters:");
+    writeln("scan_digital_hangtime: ", datafile.settings.description["scan_digital_hangtime"]);
+    writeln("scan_digital_hangtime: ", datafile.settings.get("scan_digital_hangtime"));
+
     writeln("Text messages:");
     foreach(tm; datafile.textmessages.save) {
         writeln(tm);

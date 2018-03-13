@@ -5,6 +5,9 @@ import std.conv;
 import std.string : lastIndexOf;
 import std.getopt;
 
+import std.math : round, quantize;
+
+import witchcraft;
 
 // http://forum.dlang.org/thread/eiquqszzycomrcazcfsb@forum.dlang.org
 // http://www.iz2uuf.net/wp/index.php/2016/06/04/tytera-dm380-codeplug-binary-format/
@@ -49,6 +52,9 @@ class Table(T)
         return rows.length;
     }
 
+    // Manipulation functions
+
+
     /// InputRange
     @property bool empty() const {
         // If the first record is zeroed, we will consider range empty
@@ -80,8 +86,6 @@ class Table(T)
 */
 struct RadioSettings
 {
-    static immutable ubyte zero_value = 0xFF;
-
     align(1):
     wchar[10]   info1;  // UTF16: 160 bits, 20 octets, 10 UTF16 codepoints
     wchar[10]   info2;  // UTF16: 160 bits, 20 octets, 10 UTF16 codepoints
@@ -160,6 +164,106 @@ struct RadioSettings
     ubyte[8]    unknown_offset832;          // 832
 
     wchar[16]   radio_name;                 // 896. 256 bits -> 32 octets -> 16 UTF16 codepoints
+
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    static immutable ubyte zero_value = 0xFF;
+
+    static string[int][string] lut;         // LUT: Lookup table
+    static string[string] description;
+    static uint[string] min;                /// minimum value (zero if not otherwise specified)
+    static uint[string] max;                // maximum value
+
+    alias fnptr = real function(uint data);
+    static fnptr[string] transform_out;
+    static fnptr[string] transform_in;
+
+    static this()
+    {
+        lut["monitor_type"]     = [ 0: "silent", 1: "open" ];
+        lut["talk_permit_tone"] = [ 0: "none", 1: "digital", 2: "analog", 3: "both" ];
+        lut["intro_screen"]     = [ 0: "charstrings", 1: "picture" ];
+        lut["keypad_lock_time"] = [ 1: "5 sec", 2: "10 sec", 3: "15 sec", 255: "manual" ];
+        lut["chan_display_mode"]= [ 0: "MR", 255: "CH" ];
+
+        description["tx_preamble"] = "Time in msec";
+        description["group_call_hangtime"] = "Time in msec";
+        description["private_call_hangtime"] = "Time in msec";
+        description["rx_lowbat_interval"] = "Time in sec.";
+        description["call_alert_tone"] = "Time in sec. (if 0, continue)";
+        description["scan_digital_hangtime"] = "Time in msec";
+        description["scan_analog_hangtime"] = "Time in msec";
+
+        max["radio_dmr_id"] = 16776415;
+
+        max["tx_preamble"] = 8640;
+
+        max["group_call_hangtime"] = 7000;
+        max["private_call_hangtime"] = 7000;
+
+        max["rx_lowbat_interval"] = 635;
+
+        max["call_alert_tone"] = 1200;
+
+        // "default N=10" per http://www.iz2uuf.net/wp/index.php/2016/06/04/tytera-dm380-codeplug-binary-format/
+        min["scan_digital_hangtime"] = 25;
+        max["scan_digital_hangtime"] = 500;
+        min["scan_analog_hangtime"] = 25;
+        max["scan_analog_hangtime"] = 500;
+
+        transform_out["tx_preamble"] = (x) => x*60;
+        transform_out["group_call_hangtime"] = (x) => x*100;
+        transform_out["private_call_hangtime"] = (x) => x*100;
+        transform_out["rx_lowbat_interval"] = (x) => x*5;
+        transform_out["call_alert_tone"] = (x) => x*5;
+        transform_out["scan_digital_hangtime"] = (x) => x*5;
+        transform_out["scan_analog_hangtime"] = (x) => x*5;
+        
+
+        transform_in["tx_preamble"] = (y) => round(y/60);
+        transform_in["group_call_hangtime"] = (y) => round(y/100).quantize(5.0L);
+        transform_in["private_call_hangtime"] = (y) => round(y/100).quantize(5.0L);
+        transform_in["rx_lowbat_interval"] = (y) => round(y/5);
+        transform_in["call_alert_tone"] = (y) => round(y/5);
+        transform_in["scan_digital_hangtime"] = (y) => round(y/5);
+        transform_in["scan_analog_hangtime"] = (y) => round(y/5);
+    }
+
+    auto get(string field)
+    {
+        uint val;
+        // TODO: replace with mixin template
+        switch (field)
+        {
+            case "tx_preamble":
+                val = this.tx_preamble;
+                break;
+            case "group_call_hangtime":
+                val = this.group_call_hangtime;
+                break;
+            case "private_call_hangtime":
+                val = this.private_call_hangtime;
+                break;
+            case "rx_lowbat_interval":
+                val = this.rx_lowbat_interval;
+                break;
+            case "call_alert_tone":
+                val = this.call_alert_tone;
+                break;
+            case "scan_digital_hangtime":
+                val = this.scan_digital_hangtime;
+                break;
+            case "scan_analog_hangtime":
+                val = this.scan_analog_hangtime;
+                break;
+            default:
+                val = 0;
+        }
+        //auto val = __traits(getMember, this, field);
+        if (field in transform_out)
+            return transform_out[field](val);
+        else
+            return val;
+    }
 }
 
 // textmessages,fields_textmsg.csv,50,9125,288,0,0,0
