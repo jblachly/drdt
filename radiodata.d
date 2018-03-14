@@ -176,8 +176,19 @@ struct RadioSettings
     static fnptr[string] transform_out;
     static fnptr[string] transform_in;
 
+    static string[string] field_types;
+
     static this()
     {
+        /// Reflection
+        // compile-time AA of types
+        static foreach(prop; __traits(allMembers, RadioSettings)) {
+            //mixin("field_types[\"" ~ prop ~ "\"] = typeid(this." ~ prop ~ ");");
+            //mixin("field_types[\"" ~ prop ~ "\"] = info1;");
+        }
+        writeln("field_types:");
+        writeln(field_types);
+
         lut["monitor_type"]     = [ 0: "silent", 1: "open" ];
         lut["talk_permit_tone"] = [ 0: "none", 1: "digital", 2: "analog", 3: "both" ];
         //lut["intro_screen"]     = [ 0: "charstrings", 1: "picture" ];
@@ -209,6 +220,8 @@ struct RadioSettings
         min["scan_analog_hangtime"] = 25;
         max["scan_analog_hangtime"] = 500;
 
+        // Not sure whether I prefer mixin string lambda functions or
+        // the traditional way as in tranform_in
         enum XFORM_OUT = [  ["tx_preamble", "(x) => x*60;"],
                             ["group_call_hangtime", "(x) => x*100;"],
                             ["private_call_hangtime", "(x) => x*100;"],
@@ -227,6 +240,14 @@ struct RadioSettings
         transform_in["call_alert_tone"] = (y) => round(y/5);
         transform_in["scan_digital_hangtime"] = (y) => round(y/5);
         transform_in["scan_analog_hangtime"] = (y) => round(y/5);
+
+        // debugging only
+        writeln("DEBUG: static foreach prop; __traits(allMembers, RadioSettings");
+        static foreach(prop; __traits(allMembers, RadioSettings)) {
+                writeln("Static foreach: ", prop);
+                //writeln("Get member: ", __traits(getMember, prop, this));
+        }
+
     }
 
     T get(T)(string field)
@@ -253,8 +274,9 @@ struct RadioSettings
         
         //auto val = __traits(getMember, this, field);
         static if(is(T == real)) {
-        if (field in transform_out)
-            return transform_out[field](val);
+            if (field in transform_out)
+                return transform_out[field](val);
+            else return val;
         }
         else static if(is(T == string)) {
         if (field in lut)
