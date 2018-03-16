@@ -6,6 +6,7 @@ import std.string : lastIndexOf;
 import std.getopt;
 
 import radiodata;
+import radiosettings;
 import radiodatafile;
 
 // http://forum.dlang.org/thread/eiquqszzycomrcazcfsb@forum.dlang.org
@@ -54,11 +55,16 @@ int main(string[] args) {
 
     writeln("Now trying getters / setters:");
     writeln("scan_digital_hangtime: ", datafile.settings.description["scan_digital_hangtime"]);
-    writeln("scan_digital_hangtime: ", datafile.settings.get!real("scan_digital_hangtime"));
+    //writeln("scan_digital_hangtime: ", datafile.settings.get!real("scan_digital_hangtime"));
+    //writeln("scan_digital_hangtime: ", datafile.settings.get("scan_digital_hangtime"));
 
+    /*
     writeln("Talk permit tone: ", datafile.settings.get!string("talk_permit_tone"));
     writeln("Keypad lock time: ", datafile.settings.get!string("keypad_lock_time"));
-    
+    */
+    //writeln("Talk permit tone: ", datafile.settings.get("talk_permit_tone"));
+    //writeln("Keypad lock time: ", datafile.settings.get("scan_digital_hangtime"));
+
     writeln("Text messages:");
     foreach(tm; datafile.textmessages.save) {
         writeln(tm);
@@ -68,6 +74,16 @@ int main(string[] args) {
     foreach(tm; datafile.textmessages.save) {
         writeln(tm);
     }
+
+    writeln("\nNew data class RS:");
+    RS rs = new RS;
+    writeln( rs.get("arbitrary") );
+
+    writeln("\nNew data class RS_A:");
+    RS_A rsa = new RS_A;
+    rsa.info_line1.value = "AE5ST";
+    writeln( rsa.info_line1.value );
+    writeln( rsa.get("info_line1"));
 
     f.close();
     return 0;

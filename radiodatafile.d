@@ -2,6 +2,7 @@ import std.file;
 import std.stdio;
 
 import radiodata;
+import radiosettings;
 
 class MD380CodeplugFile
 {
