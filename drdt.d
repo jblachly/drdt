@@ -50,8 +50,8 @@ int main(string[] args) {
     datafile.load_from_file(f, is_rdtfile);
 
     writeln("Radio name: ", datafile.settings.radio_name.to!string);
-    writeln("info1     : ", datafile.settings.info1.to!string);
-    writeln("info2     : ", datafile.settings.info2.to!string);
+    writeln("info_line1: ", datafile.settings.info_line1.to!string);
+    writeln("info_line2: ", datafile.settings.info_line2.to!string);
 
     writeln("Now trying getters / setters:");
     writeln("scan_digital_hangtime: ", datafile.settings.description["scan_digital_hangtime"]);
@@ -79,11 +79,16 @@ int main(string[] args) {
     RS rs = new RS;
     writeln( rs.get("arbitrary") );
 
+    
     writeln("\nNew data class RS_A:");
     RS_A rsa = new RS_A;
-    rsa.info_line1.value = "AE5ST";
-    writeln( rsa.info_line1.value );
+    rsa.load_from_mmap(datafile.settings);
     writeln( rsa.get("info_line1"));
+    writeln( rsa.get("monitor_type"));
+    writeln( rsa.get("radio_programming_password"));
+
+    writeln("");
+    print_table(rsa, "Radio Settings");
 
     f.close();
     return 0;
