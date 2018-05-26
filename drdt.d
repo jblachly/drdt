@@ -49,7 +49,7 @@ int main(string[] args) {
     else {
         writeln("Assuming BIN file");
     }
-    auto f = File(infile);
+    auto f = File(infile, "r+");
     scope(exit) f.close();
 
     MD380CodeplugFile datafile = new MD380CodeplugFile;
@@ -80,6 +80,10 @@ int main(string[] args) {
     foreach(tm; datafile.textmessages.save) {
         writeln(tm);
     }
+
+    writeln("Updating text messages");
+    datafile.textmessages.rows[1].message = "BOY HOWDY!";
+    datafile.update_file(f, is_rdtfile);
 
     writeln("\nNew data class RS:");
     RS rs = new RS;

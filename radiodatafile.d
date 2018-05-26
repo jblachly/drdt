@@ -68,4 +68,19 @@ class MD380CodeplugFile
 
         return 0;   // success?
     }
+
+    int update_file(File f, bool is_rdtfile)
+    {
+        // todo: won't work with settings yet without static if
+        void seek_and_update(T)(ref T data_table) {
+            auto immutable offset = data_table.offset;
+            f.seek(offset + (is_rdtfile ? rdt_headerlen : 0));
+            writeln(f);
+            f.rawWrite(data_table.rows);
+        }
+
+        seek_and_update(this.textmessages);
+
+        return 0;
+    }
 }
