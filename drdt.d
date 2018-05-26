@@ -22,13 +22,16 @@ int main(string[] args) {
     string outfile;
 
     bool show_settings;
-    bool dump_csv;
+    bool dump;
+    bool update;
 
     auto res = getopt(args,
                 "infile|i", "Input codeplug file (.rdt or .bin)", &infile,
                 "outfile|o","Output file (.rdt or .bin)", &outfile,
                 "settings|s", "Show radio settings", &show_settings,
-                "dumpcsv|d", "Dump data tables at CSV", &dump_csv, );
+                "dump|d",   "Dump data table(s) to CSV", &dump,
+                "update|u", "Update codeplug from CSV table(s)", &update,
+                 );
     
     if (res.helpWanted) {
         defaultGetoptPrinter("\ndRDT: Manipulate RDT codeplug files\n", res.options);
@@ -97,7 +100,7 @@ int main(string[] args) {
         print_table(rsa, "Radio Settings");
     }
 
-    if (dump_csv) {
+    if (dump) {
         writeln("\nCSV conversion:");
         datafile.textmessages.to_csv("tms.csv");
         datafile.contacts.to_csv("contacts.csv");
