@@ -182,12 +182,12 @@ struct ContactInformation
     // NB: Here, the D bitmanip bitfield seems to handle 24 bit integer OK,
     // whereas in the radio settings section is does not.
     // LSB first
-    mixin(bitfields!(
+    mixin(bitfields!(                   // (comment with closeparen to force correct syntax highlighting)
         uint, "contact_dmr_id",     24, // 0 - 23   (3 octets)
-        uint, "call_type",          2,  // 30-31
-        uint, "unknown_offset27",   3,  // 27-29 -- unknown (padding?)
-        bool, "call_receive_tone",  1,  // 26
-        uint, "unknown_offset24",   2,  // 24-25 -- unknown (padding?)
+        uint, "call_type",          2,  // 24-25
+        uint, "unknown_offset27",   3,  // 26-28 -- unknown (padding?)
+        bool, "call_receive_tone",  1,  // 29
+        uint, "unknown_offset24",   2,  // 30-31 -- unknown (padding?)
     ));
 
     wchar[16]   contact_name;           // 256 bits -> 32 octets -> 16 UTF16 codepoints
