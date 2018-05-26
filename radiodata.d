@@ -163,7 +163,7 @@ struct ContactInformation
                                             "contact_dmr_id",
                                             "call_type",
                                             "call_receive_tone",
-                                            "unknown_offset27_28",
+                                            "unknown_offset27",
                                             "unknown_offset24" ];
     align(1):
     // NB: Here, the D bitmanip bitfield seems to handle 24 bit integer OK,
@@ -172,7 +172,7 @@ struct ContactInformation
     mixin(bitfields!(
         uint, "contact_dmr_id",     24, // 0 - 23   (3 octets)
         uint, "call_type",          2,  // 30-31
-        uint, "unknown_offset27_28",3,  // 27-29 -- unknown (padding?)
+        uint, "unknown_offset27",   3,  // 27-29 -- unknown (padding?)
         bool, "call_receive_tone",  1,  // 26
         uint, "unknown_offset24",   2,  // 24-25 -- unknown (padding?)
     ));
