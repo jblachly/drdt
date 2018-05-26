@@ -212,12 +212,12 @@ struct ZoneInfo
     static immutable wchar deletion_marker = 0;
     static immutable int deletion_marker_offset = 0;
     bool empty() const @property {
-        return (name[this.deletion_marker_offset] == this.deletion_marker);
+        return (zone_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
-    static immutable string[] field_names =["name", "channel_ids"];
+    static immutable string[] field_names =["zone_name", "channel_ids"];
 
-    wchar[16]   name;                 // 256 bits / 32 octets
+    wchar[16]   zone_name;                 // 256 bits / 32 octets
     ushort[16]  channel_ids;
 }
 
@@ -228,10 +228,10 @@ struct ScanList
     static immutable wchar deletion_marker = 0;
     static immutable int deletion_marker_offset = 0;
     bool empty() const @property {
-        return (name[this.deletion_marker_offset] == this.deletion_marker);
+        return (scanlist_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
-    static immutable string[] field_names =["name",
+    static immutable string[] field_names =["scanlist_name",
                                             "priority_channel1",
                                             "priority_channel2",
                                             "tx_channel",
@@ -240,7 +240,7 @@ struct ScanList
                                             "priority_sample_time",
                                             "channel_ids"];
 
-    wchar[16]   name;               // 32 octets
+    wchar[16]   scanlist_name;               // 32 octets
     ushort      priority_channel1;  // offset: 256
     ushort      priority_channel2;  // offset: 272
     ushort      tx_channel;         // offset: 288
