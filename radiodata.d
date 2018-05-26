@@ -2,10 +2,12 @@ import std.bitmanip;
 import std.file;
 import std.stdio;
 import std.conv;
-import std.string : lastIndexOf , join;
+import std.string : indexOf, lastIndexOf , join;
 import std.getopt;
 
 import std.math : round, quantize;
+
+import std.range : enumerate;
 
 import std.traits : isFunction, isType, isFunctionPointer, hasStaticMember, hasUDA, getUDAs, getSymbolsByUDA;
 
@@ -75,9 +77,10 @@ class Table(T)
 
         writeln("\nUsing Field names array:");
 
-        fo.writeln( join(T.field_names, ',')); // header
-        foreach(row; this.rows) {
-            fo.writeln( row.asCSVrow!T );
+        auto header = "record_number" ~ T.field_names;
+        fo.writeln( join(header, ','));
+        foreach(i, row; enumerate(this.rows)) {
+            fo.writeln( i+1, ",", row.asCSVrow!T );
         }
     }
 
@@ -107,10 +110,13 @@ class Table(T)
 string asCSVrow(S)(S s)
 {
     string row;
+    string field;
 
     static foreach(fn; S.field_names) {
-        row ~= __traits(getMember, s, fn).to!string;
-        row ~= ",";
+        field = __traits(getMember, s, fn).to!string;
+        if (field.indexOf(',') != -1)
+            field = "\"" ~ field ~ "\"";
+        row ~= field ~ ",";
     }
     row = row[0 .. $-1];
     return row;
@@ -242,7 +248,8 @@ struct ChannelInformation
         return ((cast(ubyte*)&this)[deletion_marker_offset] == this.deletion_marker);
     }
 
-    static immutable string[] field_names =["channel_mode",
+    static immutable string[] field_names =["channel_name",
+                                            "channel_mode",
                                             "unknown_offset5",
                                             "bandwidth",
                                             "autoscan",
