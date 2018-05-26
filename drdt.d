@@ -18,11 +18,29 @@ int main(string[] args) {
 
     string infile;
     bool is_rdtfile;
-    getopt(args, "infile|i", &infile);
+
+    string outfile;
+
+    bool show_settings;
+    bool dump_csv;
+
+    auto res = getopt(args,
+                "infile|i", "Input codeplug file (.rdt or .bin)", &infile,
+                "outfile|o","Output file (.rdt or .bin)", &outfile,
+                "settings|s", "Show radio settings", &show_settings,
+                "dumpcsv|d", "Dump data tables at CSV", &dump_csv, );
+    
+    if (res.helpWanted) {
+        defaultGetoptPrinter("\ndRDT: Manipulate RDT codeplug files\n", res.options);
+        writeln();
+        return 1;
+    }
+
     if(!infile.length) {
         writeln("Please specify an input file with -i/--infile");
         return -1;
     }
+    
     // TODO check bin/rdt file length is correct
     if (infile[lastIndexOf(infile, '.') .. $] == ".rdt") {
         writeln("RDT file");
@@ -32,6 +50,7 @@ int main(string[] args) {
         writeln("Assuming BIN file");
     }
     auto f = File(infile);
+    scope(exit) f.close();
 
     /*
     writeln(settings[0].info1.to!string);
@@ -87,17 +106,19 @@ int main(string[] args) {
     writeln( rsa.get("monitor_type"));
     writeln( rsa.get("radio_programming_password"));
 
-    writeln("");
-    print_table(rsa, "Radio Settings");
+    if (show_settings) {
+        print_table(rsa, "Radio Settings");
+    }
 
-    writeln("\nCSV conversion:");
-    datafile.textmessages.to_csv("tms.csv");
-    datafile.contacts.to_csv("contacts.csv");
-    datafile.rxgroups.to_csv("rxgroups.csv");
-    datafile.zones.to_csv("zones.csv");
-    datafile.scanlists.to_csv("scanlists.csv");
-    datafile.channels.to_csv("channels.csv");
+    if (dump_csv) {
+        writeln("\nCSV conversion:");
+        datafile.textmessages.to_csv("tms.csv");
+        datafile.contacts.to_csv("contacts.csv");
+        datafile.rxgroups.to_csv("rxgroups.csv");
+        datafile.zones.to_csv("zones.csv");
+        datafile.scanlists.to_csv("scanlists.csv");
+        datafile.channels.to_csv("channels.csv");
+    }
 
-    f.close();
     return 0;
 }
