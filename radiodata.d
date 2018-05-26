@@ -65,17 +65,17 @@ class Table(T)
     // Export
     void to_csv(string filename)
     {
+        writeln("Writing ", filename);
         File fo = File(filename, "w");
         scope(exit) fo.close();
 
+        /+
         writeln("\nUsing Compile time introspection only:");
         static foreach(prop; __traits(allMembers, T)) {
             static if ( prop[0] != '_' &&
                         !hasStaticMember!(T, prop) )
                 writeln(prop, " => ", typeid(__traits(getMember, this.rows[0], prop)));
-        }
-
-        writeln("\nUsing Field names array:");
+        }+/
 
         auto header = "record_number" ~ T.field_names;
         fo.writeln( join(header, ','));
@@ -84,6 +84,13 @@ class Table(T)
         }
     }
 
+    /* Range functions
+     * 
+     * TODO: I am not sure I even want to use these --
+     * they do allow me to iterate through the table,
+     * but since each table has an embedded T[] rows,
+     * I could just iterate through that directly
+     */
     /// InputRange
     @property bool empty() const {
         // If the first record is zeroed, we will consider range empty
@@ -100,13 +107,14 @@ class Table(T)
     @property typeof(this) save() const {
         return this.dup;
     }
-
     // RandomAccessRange
     T opIndex(size_t index) const {
         return this.rows[index];
     }
 }
 
+/// asCSV row serializes a struct to a CSV row
+/// TODO: should this be merged into the Table template?
 string asCSVrow(S)(S s)
 {
     string row;
