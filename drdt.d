@@ -52,19 +52,6 @@ int main(string[] args) {
     auto f = File(infile);
     scope(exit) f.close();
 
-    /*
-    writeln(settings[0].info1.to!string);
-    writeln(settings[0].info2.to!string);
-    writeln(settings[0].radio_name.to!string);
-    writeln("Talk permit tone: ", settings[0].talk_permit_tone);
-    writeln("Keypad tones    : ", settings[0].keypad_tones);
-    writeln("Intro screen: ", settings[0].intro_screen);
-    writefln("DMR id: %d", settings[0].radio_dmr_id);
-    writefln("Radio programming password: [%s]", settings[0].radio_programming_password);
-    */
-
-    writeln("Now with new class interface");
-
     MD380CodeplugFile datafile = new MD380CodeplugFile;
     datafile.load_from_file(f, is_rdtfile);
 
