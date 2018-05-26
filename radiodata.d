@@ -72,10 +72,19 @@ class Table(T)
         /+
         writeln("\nUsing Compile time introspection only:");
         static foreach(prop; __traits(allMembers, T)) {
+            /* Filter out:
+             * bitfields, bitfield _min and _max helper functions,
+             * our functions empty/toString
+             * static member vars which are really properties of the data type
+             */
             static if ( prop[0] != '_' &&
+                        (prop.length > 4 && prop[ $-4 .. $] != "_min") &&
+                        (prop.length > 4 && prop[ $-4 .. $] != "_max") &&
+                        prop != "empty" &&
+                        prop != "toString" &&
                         !hasStaticMember!(T, prop) )
                 writeln(prop, " => ", typeid(__traits(getMember, this.rows[0], prop)));
-        }+/
+        } +/
 
         auto header = "record_number" ~ T.field_names;
         fo.writeln( join(header, ','));
@@ -257,6 +266,7 @@ struct ChannelInformation
     }
 
     static immutable string[] field_names =["channel_name",
+
                                             "channel_mode",
                                             "unknown_offset5",
                                             "bandwidth",
@@ -264,6 +274,65 @@ struct ChannelInformation
                                             "squelch",
                                             "unknown_offset1",
                                             "lone_worker",
+
+                                            "allow_talkaround",
+                                            "rx_only",
+                                            "time_slot",
+                                            "color_code",
+
+                                            "privacy_no",
+                                            "privacy",
+                                            "private_call_conf",
+                                            "data_call_conf",
+
+                                            "rx_ref_frequency",
+                                            "unknown_offset29",
+                                            "emergency_alarm_ack",
+                                            "unknown_off_26_27",
+                                            "compressed_udp_header",
+                                            "display_ptt_id",
+
+                                            "tx_ref_frequency",
+                                            "reverse_burst",
+                                            "qt_reverse",
+                                            "vox",
+                                            "power",
+                                            "admit_criteria",
+
+                                            "unknown_offset40",
+
+                                            "contact_name_id",
+
+                                            "timeout_time",
+                                            "unknown_offset64_65",
+
+                                            "tot_rekey_delay",
+
+                                            "emergency_system",
+                                            "unknown_offset80_81",
+
+                                            "scan_list",
+
+                                            "group_list",
+
+                                            "unknown_offset104",
+
+                                            "decode18",
+
+                                            "unknown_offset120",
+
+                                            "rx_frequency",
+                                            "tx_frequency",
+
+                                            "ctcss_dcs_decode",
+                                            "ctcss_dcs_encode",
+
+                                            "rx_signaling_system",
+                                            "unknown_offset224_228",
+
+                                            "unknown_offset240_255",
+
+                                            /* channel_name moved to top */
                                             ];
 
     align(1):
@@ -279,7 +348,7 @@ struct ChannelInformation
         bool, "lone_worker",    1));// 0
 
     // byte 0x01
-    mixin(bitfields!(
+    mixin(bitfields!(               // (comment with closeparen to force correct syntax highlighting)
         bool, "allow_talkaround",1, // 15
         bool, "rx_only",        1,  // 14
         uint, "time_slot",      2,  // 12-13
