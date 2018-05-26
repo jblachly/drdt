@@ -93,6 +93,10 @@ struct TextMessage
     }
 
     wchar[144] message; // UTF16: 288 octets; 2304 bytes
+
+    string toString() {
+        return this.message.to!string;
+    }
 }
 
 // contacts,fields_contact.csv,1000,24997,36,255,4,5
