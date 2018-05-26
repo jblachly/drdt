@@ -570,6 +570,7 @@ struct RadioSettings
 
     /// END MEMORY MAP ///
     ////////////////////////////////////////////////////////////////////////////////////////////
+    static immutable uint first_record_offset = 0x2040;
     static immutable ubyte zero_value = 0xFF;
 
     static string[int][string] lut;         // LUT: Lookup table

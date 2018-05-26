@@ -76,14 +76,10 @@ int main(string[] args) {
         writeln(tm);
     }
 
-    writeln("Text messages:");
+    writeln("Repeat Text messages:");
     foreach(tm; datafile.textmessages.save) {
         writeln(tm);
     }
-
-    writeln("Updating text messages");
-    datafile.textmessages.rows[1].message = "BOY HOWDY!";
-    datafile.update_file(f, is_rdtfile);
 
     writeln("\nNew data class RS:");
     RS rs = new RS;

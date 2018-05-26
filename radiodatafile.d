@@ -41,11 +41,17 @@ class MD380CodeplugFile
         this.channels = new Table!(ChannelInformation)(1000);
     }
 
+    /** load_from_file
+     *
+     *  Populates the MD380CodePlugFile data model's constituent models
+     *  from an RDT or BIN (raw memory dump) codeplug file
+     */
     int load_from_file(File f, bool is_rdtfile)
     {
         // closure over f and is_rdtfile
         // without 'ref' RadioSettings being a Value type is copied , stupid bug
         void seek_and_read_into(T)(int offset, ref T data_table) {
+            //auto immutable offset = data_table.offset;
             f.seek(offset + (is_rdtfile ? rdt_headerlen : 0));
             static if(is(T == RadioSettings))
                 f.rawRead(cast(RadioSettings[1])data_table);
@@ -55,8 +61,10 @@ class MD380CodeplugFile
             }
         }
 
-        // Also need to do settings -- not sure best way (encpsulate in Table or not?)
-        // it apears I can cast to array of length 1 to deserialize
+        // TODO Grab the header (footer?) in case it is important ...
+
+        // Should settings be encapsulated in Table or not?
+        // I can cast to array of length 1 to deserialize (see above static if)
         seek_and_read_into(0x2040, this.settings);
 
         seek_and_read_into(0x2180, this.textmessages);
@@ -69,18 +77,49 @@ class MD380CodeplugFile
         return 0;   // success?
     }
 
+    /** update_file
+     *
+     *  updates an existing file in place in its totality -- 
+     *  all sections of the file are automatically updated
+     *  from the underlying model
+     */ 
     int update_file(File f, bool is_rdtfile)
     {
+        // TODO: catch exception, if file descriptor
+        // not opened for update or write, will crash with exception
         // todo: won't work with settings yet without static if
         void seek_and_update(T)(ref T data_table) {
-            auto immutable offset = data_table.offset;
+            auto immutable offset = data_table.first_record_offset;
             f.seek(offset + (is_rdtfile ? rdt_headerlen : 0));
-            writeln(f);
-            f.rawWrite(data_table.rows);
+            static if(is(T == RadioSettings))
+                f.rawWrite(cast(RadioSettings[1])data_table);
+            else 
+                f.rawWrite(data_table.rows);
         }
 
+        seek_and_update(this.settings);
+
         seek_and_update(this.textmessages);
+        seek_and_update(this.contacts);
+        seek_and_update(this.rxgroups);
+        seek_and_update(this.zones);
+        seek_and_update(this.scanlists);
+        seek_and_update(this.channels);
 
         return 0;
+    }
+
+    /** dump_to_new_file
+     *
+     *  Serializes the MD380CodePlugFile and its constituent data models
+     *  to a brand new RDT or BIN (raw memory dump) file,  
+     *  including filling in unknown gaps between the models,
+     *  and in the case of RDT, synthesizing a header and footer with
+     *  empirical but unknown data pulled from an existing RDT file
+     */
+    int dump_to_new_file(string filename, bool is_rdtfile)
+    {
+        assert(0);
+        return -1;
     }
 }

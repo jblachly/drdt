@@ -27,7 +27,7 @@ immutable ubyte[16] rdt_footer = [0x00, 0x02, 0x11, 0xdf, 0x83, 0x04, 0x1a, 0x01
 class Table(T)
 {
     T[] rows;
-    ulong offset;   /** offset in binary codeplug file, copied from T.first_record_offset */
+    ulong first_record_offset;   /** offset in binary codeplug file, copied from T.first_record_offset */
 
     this(ulong max_records)
     {
@@ -35,7 +35,7 @@ class Table(T)
 
         this.rows.length = max_records; // Forces reallocation (and copy if applic)
 
-        this.offset = T.first_record_offset;
+        this.first_record_offset = T.first_record_offset;
     }
     /*
     this(T: Table!TextMessage)(int max_records)
