@@ -1,3 +1,4 @@
+import std.algorithm : joiner;
 import std.bitmanip;
 import std.file;
 import std.stdio;
@@ -10,6 +11,8 @@ import std.math : round, quantize;
 import std.range : enumerate;
 
 import std.traits : isFunction, isType, isFunctionPointer, hasStaticMember, hasUDA, getUDAs, getSymbolsByUDA;
+
+import std.csv;
 
 import radiosettings;
 
@@ -64,6 +67,21 @@ class Table(T)
     // Manipulation functions
 
     // Import
+    void from_csv(string filename)
+    {
+        writeln("Reading ", filename);
+        File fi = File(filename, "r");
+        scope(exit) fi.close();
+
+        int num_records_updated = 0;
+        foreach(record; fi.byLine.joiner("\n").csvReader!(string[string])(null)) {
+            auto rnum = record["record_number"];
+            /* no op */
+            // this.rows[rnum - 1] = T.fromCSVrow(record);
+            num_records_updated++;
+        }
+        writeln("Number of records updated from CSV: ", num_records_updated);
+    }
 
     // Export
     void to_csv(string filename)
