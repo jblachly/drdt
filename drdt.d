@@ -90,6 +90,14 @@ int main(string[] args) {
     writeln("");
     print_table(rsa, "Radio Settings");
 
+    writeln("\nCSV conversion:");
+    datafile.textmessages.to_csv("tms.csv");
+    datafile.contacts.to_csv("contacts.csv");
+    datafile.rxgroups.to_csv("rxgroups.csv");
+    datafile.zones.to_csv("zones.csv");
+    datafile.scanlists.to_csv("scanlists.csv");
+    datafile.channels.to_csv("channels.csv");
+
     f.close();
     return 0;
 }

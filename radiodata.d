@@ -2,10 +2,12 @@ import std.bitmanip;
 import std.file;
 import std.stdio;
 import std.conv;
-import std.string : lastIndexOf;
+import std.string : lastIndexOf , join;
 import std.getopt;
 
 import std.math : round, quantize;
+
+import std.traits : isFunction, isType, isFunctionPointer, hasStaticMember, hasUDA, getUDAs, getSymbolsByUDA;
 
 import radiosettings;
 
@@ -56,6 +58,28 @@ class Table(T)
 
     // Manipulation functions
 
+    // Import
+
+    // Export
+    void to_csv(string filename)
+    {
+        File fo = File(filename, "w");
+        scope(exit) fo.close();
+
+        writeln("\nUsing Compile time introspection only:");
+        static foreach(prop; __traits(allMembers, T)) {
+            static if ( prop[0] != '_' &&
+                        !hasStaticMember!(T, prop) )
+                writeln(prop, " => ", typeid(__traits(getMember, this.rows[0], prop)));
+        }
+
+        writeln("\nUsing Field names array:");
+
+        fo.writeln( join(T.field_names, ',')); // header
+        foreach(row; this.rows) {
+            fo.writeln( row.asCSVrow!T );
+        }
+    }
 
     /// InputRange
     @property bool empty() const {
@@ -80,7 +104,17 @@ class Table(T)
     }
 }
 
+string asCSVrow(S)(S s)
+{
+    string row;
 
+    static foreach(fn; S.field_names) {
+        row ~= __traits(getMember, s, fn).to!string;
+        row ~= ",";
+    }
+    row = row[0 .. $-1];
+    return row;
+}
 
 // textmessages,fields_textmsg.csv,50,9125,288,0,0,0
 struct TextMessage
@@ -91,6 +125,8 @@ struct TextMessage
     bool empty() const @property {
         return (message[this.deletion_marker_offset] == this.deletion_marker);
     }
+
+    static immutable string[] field_names =["message"];
 
     wchar[144] message; // UTF16: 288 octets; 2304 bytes
 
@@ -109,6 +145,12 @@ struct ContactInformation
         return (contact_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    static immutable string[] field_names =["contact_name",
+                                            "contact_dmr_id",
+                                            "call_type",
+                                            "call_receive_tone",
+                                            "unknown_offset27_28",
+                                            "unknown_offset24" ];
     align(1):
     // NB: Here, the D bitmanip bitfield seems to handle 24 bit integer OK,
     // whereas in the radio settings section is does not.
@@ -134,6 +176,8 @@ struct RxGroup
         return (rxgroup_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    static immutable string[] field_names =["rxgroup_name", "contact_ids"];
+
     wchar[16]   rxgroup_name;           // 256 bits -> 32 octets -> 16 UTF16 codepoints
     ushort[32]  contact_ids;            // 512 bits = 32 * 16-bit contact id (lookup into contacts table)
 }
@@ -148,6 +192,8 @@ struct ZoneInfo
         return (name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    static immutable string[] field_names =["name", "channel_ids"];
+
     wchar[16]   name;                 // 256 bits / 32 octets
     ushort[16]  channel_ids;
 }
@@ -161,6 +207,15 @@ struct ScanList
     bool empty() const @property {
         return (name[this.deletion_marker_offset] == this.deletion_marker);
     }
+
+    static immutable string[] field_names =["name",
+                                            "priority_channel1",
+                                            "priority_channel2",
+                                            "tx_channel",
+                                            "unknown_offset304",
+                                            "sign_hold_time",
+                                            "priority_sample_time",
+                                            "channel_ids"];
 
     wchar[16]   name;               // 32 octets
     ushort      priority_channel1;  // offset: 256
@@ -186,6 +241,15 @@ struct ChannelInformation
     bool empty() const @property {
         return ((cast(ubyte*)&this)[deletion_marker_offset] == this.deletion_marker);
     }
+
+    static immutable string[] field_names =["channel_mode",
+                                            "unknown_offset5",
+                                            "bandwidth",
+                                            "autoscan",
+                                            "squelch",
+                                            "unknown_offset1",
+                                            "lone_worker",
+                                            ];
 
     align(1):
     // Bitfields are allocated from LSB, so these are broken into groups of 8 bits for clarity
