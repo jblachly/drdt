@@ -2,7 +2,7 @@ import std.bitmanip;
 import std.file;
 import std.stdio;
 import std.conv;
-import std.string : indexOf, lastIndexOf , join;
+import std.string : indexOf , join, tr;
 import std.getopt;
 
 import std.math : round, quantize;
@@ -130,7 +130,8 @@ string asCSVrow(S)(S s)
     string field;
 
     static foreach(fn; S.field_names) {
-        field = __traits(getMember, s, fn).to!string;
+        // tr("\0", "", "d") is necessary to strip the NULL characters
+        field = __traits(getMember, s, fn).to!string.tr("\0", "", "d");
         if (field.indexOf(',') != -1)
             field = "\"" ~ field ~ "\"";
         row ~= field ~ ",";
@@ -153,8 +154,8 @@ struct TextMessage
 
     wchar[144] message; // UTF16: 288 octets; 2304 bytes
 
-    string toString() {
-        return this.message.to!string;
+    string toString() const {
+        return this.message.to!string.tr("\0", "", "d");
     }
 }
 
@@ -438,7 +439,7 @@ struct ChannelInformation
     wchar[16] channel_name;
 
     string toString() const {
-        return channel_name.to!string;
+        return channel_name.to!string.tr("\0", "", "d");
     }
 }
 
