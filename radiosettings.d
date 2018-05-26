@@ -89,7 +89,7 @@ class BCDField : Field
         ubyte[4] res = bcd_encode(val, this.num_octets);
         uint *res_int = cast(uint *) res;
         this.coded_value = *res_int;
-//        this.coded_value = cast(uint) bcd_encode(val, this.num_octets);
+        // this.coded_value = cast(uint) bcd_encode(val, this.num_octets);
     }
     @property void value(string val) {
         // this will be called when loading
@@ -323,7 +323,7 @@ void print_table(RS_A rs, string title="")
     auto max_val_width= fields.values.map!(x => x.length).reduce!max;
 
     auto table_width = (max_fn_width + max_val_width)+3;
-    writeln(center(title, table_width));
+    writeln( center(title, table_width));
     writeln( replicate("-", table_width));
     // Cannot iterate foreach (kv, fields.byKeyValue)
     // because the AA is in a nondeterministic order
@@ -736,10 +736,11 @@ static this()
     writeln("<Static module constructor radiosettings.d>");
     RadioSettings rs;
     /// Reflection
-    // compile-time AA of types
+    // TODO: build compile-time AA of types
     static foreach(prop; __traits(allMembers, RadioSettings)) {
         static if (!isFunction!(mixin("RadioSettings."~prop)) && !isFunctionPointer!(mixin("RadioSettings."~prop)) && !__traits(isTemplate, mixin("RadioSettings."~prop)) )
-            mixin("writeln(prop, \" => \", typeid(rs."~prop~"));");
+            //mixin("writeln(prop, \" => \", typeid(rs."~prop~"));");
+            writeln(prop, " => ", typeid(__traits(getMember, rs, prop)));
     }
     writeln("<end static module constructor>");
 }
