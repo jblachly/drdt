@@ -34,7 +34,7 @@ class Table(T)
 
     this(ulong max_records)
     {
-        writeln("Table constructor generic");
+        debug writeln("Table constructor generic");
 
         this.rows.length = max_records; // Forces reallocation (and copy if applic)
 

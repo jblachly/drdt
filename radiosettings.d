@@ -235,7 +235,7 @@ class RS_A
 
     string getX(string field)
     {
-        writeln("RS_A::getX");
+        debug writeln("RS_A::getX");
 
         // works: writeln(hasUDA!(info_line1, 7));
 
@@ -649,10 +649,12 @@ struct RadioSettings
         transform_in["scan_analog_hangtime"] = (y) => round(y/5);
 
         // debugging only
-        writeln("DEBUG: static foreach prop; __traits(allMembers, RadioSettings");
-        static foreach(prop; __traits(allMembers, RadioSettings)) {
-                writeln("Static foreach: ", prop);
-                //writeln("Get member: ", __traits(getMember, prop, this));
+        debug {
+            writeln("DEBUG: static foreach prop; __traits(allMembers, RadioSettings");
+            static foreach(prop; __traits(allMembers, RadioSettings)) {
+                    writeln("Static foreach: ", prop);
+                    //writeln("Get member: ", __traits(getMember, prop, this));
+            }
         }
 
     }
@@ -734,14 +736,14 @@ struct RadioSettings
 }
 static this()
 {
-    writeln("<Static module constructor radiosettings.d>");
+    debug writeln("<Static module constructor radiosettings.d>");
     RadioSettings rs;
     /// Reflection
     // TODO: build compile-time AA of types
     static foreach(prop; __traits(allMembers, RadioSettings)) {
         static if (!isFunction!(mixin("RadioSettings."~prop)) && !isFunctionPointer!(mixin("RadioSettings."~prop)) && !__traits(isTemplate, mixin("RadioSettings."~prop)) )
             //mixin("writeln(prop, \" => \", typeid(rs."~prop~"));");
-            writeln(prop, " => ", typeid(__traits(getMember, rs, prop)));
+            debug writeln(prop, " => ", typeid(__traits(getMember, rs, prop)));
     }
-    writeln("<end static module constructor>");
+    debug writeln("<end static module constructor>");
 }

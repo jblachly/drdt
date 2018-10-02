@@ -110,5 +110,9 @@ int main(string[] args) {
         datafile.channels.to_csv("channels.csv");
     }
 
+    if (update) {
+        writeln("\nUpdating tables from CSV files...");
+    }
+
     return 0;
 }
