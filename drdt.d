@@ -22,13 +22,18 @@ int main(string[] args) {
     string outfile;
 
     bool show_settings;
+    bool read_settings;
+    bool write_settings;
+
     bool dump;
     bool update;
 
     auto res = getopt(args,
                 "infile|i", "Input codeplug file (.rdt or .bin)", &infile,
                 "outfile|o","Output file (.rdt or .bin)", &outfile,
-                "settings|s", "Show radio settings", &show_settings,
+                "show-settings|s", "Show radio settings", &show_settings,
+                "read-settings", "Read radio settings from settings.csv", &read_settings,
+                "write-settings", "Write radio settings to settings.csv", &write_settings,
                 "dump|d",   "Dump data table(s) to CSV", &dump,
                 "update|u", "Update codeplug from CSV table(s)", &update,
                  );
@@ -45,19 +50,16 @@ int main(string[] args) {
     }
     
     // TODO check bin/rdt file length is correct
-    if (infile[lastIndexOf(infile, '.') .. $] == ".rdt") {
-        writeln("RDT file");
-        is_rdtfile = true;
-    }
-    else {
-        writeln("Assuming BIN file");
-    }
+    if (infile[lastIndexOf(infile, '.') .. $] == ".rdt") is_rdtfile = true; 
+    else writeln("(Assuming BIN file)");
+
     auto f = File(infile, "r+");
     scope(exit) f.close();
 
     MD380CodeplugFile datafile = new MD380CodeplugFile;
     datafile.load_from_file(f, is_rdtfile);
 
+debug {
     writeln("Radio name: ", datafile.settings.radio_name.to!string);
     writeln("info_line1: ", datafile.settings.info_line1.to!string);
     writeln("info_line2: ", datafile.settings.info_line2.to!string);
@@ -83,6 +85,7 @@ int main(string[] args) {
     foreach(tm; datafile.textmessages.save) {
         writeln(tm);
     }
+}
 
     writeln("\nNew data class RS:");
     RS rs = new RS;
@@ -98,6 +101,16 @@ int main(string[] args) {
 
     if (show_settings) {
         print_table(rsa, "Radio Settings");
+    }
+
+    // TODO: it should (probably) be an error to both read and write settings
+    if (read_settings) {
+        writeln("Reading settings (NOOP) from settings.csv");
+    }
+
+    if (write_settings) {
+        writeln("Writing radio settings to settings.csv");
+        write_csv(rsa, "settings.csv");
     }
 
     if (dump) {

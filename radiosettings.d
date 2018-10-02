@@ -17,6 +17,8 @@ class Field
     int min;
     int max;
     string units;
+
+    string choices; // overloaded in MultipleChoiceField
 }
 class StringField : Field
 {
@@ -56,6 +58,7 @@ class MultipleChoiceField : Field
     }
     @property void value(string choice) {
         // rely on error handling in value(int)
+        // TODO, could also lookup string choice in string[int] choices?
         this.value = choice.to!int;
     }
 }
@@ -268,13 +271,28 @@ class RS_A
             static foreach (f; RS_A.tupleof) {
                 debug { pragma(msg, __traits(identifier, f)); }
                 case __traits(identifier, f): return f.value.to!string; break SWouter;
-        }
+            }
             default: assert(0);
         }
 
         return "(no result)";
     }
 
+    string getChoices(string field)
+    {
+        SWouterChoices:
+        switch (field)
+        {
+            static foreach (f; RS_A.tupleof) {
+                case __traits(identifier, f): return f.choices.to!string; break SWouterChoices;
+            }
+            default: assert(0);
+        }
+
+        return "(no choices)";
+    }
+
+    /// Set a field from a string value, works automagically using std.conv.to!(typeof(f.value))
     void set(string field, string value)
     {
         SWouter2:
@@ -331,6 +349,21 @@ void print_table(RS_A rs, string title="")
     // weird right-justification when it counted the nulls (but didn't display them)
     foreach (f; field_names) {
         writefln("%*s | %s", max_fn_width, f.prettify_field_name, fields[f]);
+    }
+}
+
+/// Write Radio Settings to (sort of) .CSV file
+void write_csv(RS_A rs, string filename)
+{
+    File fo = File(filename, "w");
+    scope(exit) fo.close();
+
+    // header
+    fo.writeln("setting,value,possible_values");
+
+    auto field_names = rs.all_fields;
+    foreach (f; field_names) {
+        fo.writefln("%s,%s,%s", f, rs.get(f), rs.getChoices(f));
     }
 }
 
@@ -593,8 +626,10 @@ struct RadioSettings
             //mixin("field_types[\"" ~ prop ~ "\"] = typeid(this." ~ prop ~ ");");
             //mixin("field_types[\"" ~ prop ~ "\"] = info1;");
         }
-        writeln("field_types:");
-        writeln(field_types);
+        debug {
+            writeln("field_types:");
+            writeln(field_types);
+        }
 
         lut["monitor_type"]     = [ 0: "silent", 1: "open" ];
         lut["talk_permit_tone"] = [ 0: "none", 1: "digital", 2: "analog", 3: "both" ];
