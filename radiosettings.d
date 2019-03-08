@@ -44,8 +44,12 @@ class MultipleChoiceField : Field
     this(string fn) {
         this.field_name = fn;
     }
+    /// Return string representation of value;
+    ///     possibilities are "n", "(n) Description", or "Description"
     @property string value() {
-        return "("~ this._value.to!string ~") " ~ choices[this._value];
+        //return this._value.to!string;
+        //return "("~ this._value.to!string ~") " ~ choices[this._value];
+        return choices[this._value];
     }
     @property void value(int choice) {
         // TODO better error handling ; check if choice in choices
