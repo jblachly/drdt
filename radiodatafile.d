@@ -4,11 +4,14 @@ import std.stdio;
 import radiodata;
 import radiosettings;
 
+///
 class MD380CodeplugFile
 {
-    static immutable int rdt_headerlen = 549;
-    static immutable ubyte[rdt_headerlen] rdt_header;
-    static immutable ubyte[16] rdt_footer = [0x00, 0x02, 0x11, 0xdf, 0x83, 0x04, 0x1a, 0x01, 0x55, 0x46, 0x44, 0x10, 0x12, 0x71, 0x65, 0x8e];
+    static immutable int rdt_headerlen = 549;           /// unknown content
+    static immutable ubyte[rdt_headerlen] rdt_header;   /// ditto
+    static immutable ubyte[16] rdt_footer = [
+        0x00, 0x02, 0x11, 0xdf, 0x83, 0x04, 0x1a, 0x01, 
+        0x55, 0x46, 0x44, 0x10, 0x12, 0x71, 0x65, 0x8e];/// ditto
 
     // https://dlang.org/spec/hash-map.html#static_initialization
     // is wrong; apparently static initialization of AAs was never implemented even though speced
@@ -22,16 +25,18 @@ class MD380CodeplugFile
         "ChannelInformation":   0x1EE00,
     ]; */
 
-    RadioSettings           settings;
-    Table!TextMessage       textmessages;
-    Table!ContactInformation contacts;
-    Table!RxGroup           rxgroups;
-    Table!ZoneInfo          zones;
-    Table!ScanList          scanlists;
-    Table!ChannelInformation channels;
+    RadioSettings           settings;       /// Radio settings
+    Table!TextMessage       textmessages;   /// Predefined text messages
+    Table!ContactInformation contacts;      /// Contact list
+    Table!RxGroup           rxgroups;       /// RX groups (each a list of channels)
+    Table!ZoneInfo          zones;          /// Zones (each a list of channels)
+    Table!ScanList          scanlists;      /// Scanning lists (each a list of channels)
+    Table!ChannelInformation channels;      /// Channel data
 
+    /// default constructor sets up empty Tables 
     this()
     {
+        // TODO, these sizes could be parameterized to support different formats
         // settings already allocated as struct;
         this.textmessages = new Table!(TextMessage)(50);
         this.contacts = new Table!(ContactInformation)(1000);
