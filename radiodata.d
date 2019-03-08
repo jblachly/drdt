@@ -23,15 +23,18 @@ import radiosettings;
 
 // table,tabledef_fn,num_records,first_record_offset,record_length,zero_value,deletion_marker_offset,deletion_marker_value
 
-immutable int rdt_headerlen = 549;
-immutable ubyte[rdt_headerlen] rdt_header;
-immutable ubyte[16] rdt_footer = [0x00, 0x02, 0x11, 0xdf, 0x83, 0x04, 0x1a, 0x01, 0x55, 0x46, 0x44, 0x10, 0x12, 0x71, 0x65, 0x8e];
+immutable int rdt_headerlen = 549;  /// unknown content
+immutable ubyte[rdt_headerlen] rdt_header;  /// ditto
+immutable ubyte[16] rdt_footer = [
+    0x00, 0x02, 0x11, 0xdf, 0x83, 0x04, 0x1a, 0x01,
+    0x55, 0x46, 0x44, 0x10, 0x12, 0x71, 0x65, 0x8e];    /// ditto
 
 class Table(T)
 {
-    T[] rows;
-    ulong first_record_offset;   /** offset in binary codeplug file, copied from T.first_record_offset */
+    T[] rows;                   /// Table rows
+    ulong first_record_offset;  /** offset in binary codeplug file, copied from T.first_record_offset */
 
+    /// Constructor: specify number of table rows
     this(ulong max_records)
     {
         debug writeln("Table constructor generic");
@@ -47,7 +50,7 @@ class Table(T)
         this.rows.length = max_records;  // Forces reallocation (and copy if applic)
         this.first_record_offset = 0x2180;      // raw, not RDT
     }*/
-    // needed for ForwardRange
+    /// needed for ForwardRange
     auto dup() const
     {
         auto copy = new Table!T(rows.length);
@@ -57,16 +60,19 @@ class Table(T)
         return copy;
     }
 
+    /// Length in bytes of row === encapsulated struct
     @property uint record_length() const {
         return T.sizeof;
     }
+    /// Number of rows / records
     @property ulong max_records() const {
         return rows.length;
     }
 
     // Manipulation functions
 
-    // Import
+    /// Import
+    /// TODO
     void from_csv(string filename)
     {
         writeln("Reading ", filename);
@@ -83,7 +89,7 @@ class Table(T)
         writeln("Number of records updated from CSV: ", num_records_updated);
     }
 
-    // Export
+    /// Export
     void to_csv(string filename)
     {
         writeln("Writing ", filename);
@@ -126,18 +132,20 @@ class Table(T)
         // If the first record is zeroed, we will consider range empty
         return (this.rows[0].empty);
     }
+    /// ditto
     @property ref T front() {
         // ref is used since we are dealing wiht Structs (value type; do not want to make a copy)
         return (this.rows[0]);
     }
+    /// ditto
     void popFront() {
         this.rows = this.rows[1 .. $];
     }
-    // ForwardRange
+    /// ForwardRange
     @property typeof(this) save() const {
         return this.dup;
     }
-    // RandomAccessRange
+    /// RandomAccessRange
     T opIndex(size_t index) const {
         return this.rows[index];
     }
@@ -145,7 +153,7 @@ class Table(T)
 
 /// asCSV row serializes a struct to a CSV row
 /// TODO: should this be merged into the Table template?
-string asCSVrow(S)(S s)
+string asCSVrow(S)(S s) // @suppress(dscanner.suspicious.unused_parameter)
 {
     string row;
     string field;
@@ -161,35 +169,37 @@ string asCSVrow(S)(S s)
     return row;
 }
 
-// textmessages,fields_textmsg.csv,50,9125,288,0,0,0
+/// textmessages,fields_textmsg.csv,50,9125,288,0,0,0
 struct TextMessage
 {
-    static immutable uint first_record_offset = 0x2180;
-    static immutable wchar deletion_marker = 0;
-    static immutable int deletion_marker_offset = 0;
+    static immutable uint first_record_offset = 0x2180; /// offset in binary codeplug
+    static immutable wchar deletion_marker = 0;         /// deletion marker
+    static immutable int deletion_marker_offset = 0;    /// deletion marker offset past first_record_offset
     bool empty() const @property {
         return (message[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    /// field names for serialization
     static immutable string[] field_names =["message"];
 
-    wchar[144] message; // UTF16: 288 octets; 2304 bytes
+    wchar[144] message; /// UTF16: 288 octets; 2304 bytes
 
     string toString() const {
         return this.message.to!string.tr("\0", "", "d");
     }
 }
 
-// contacts,fields_contact.csv,1000,24997,36,255,4,5
+/// contacts,fields_contact.csv,1000,24997,36,255,4,5
 struct ContactInformation
 {
-    static immutable uint first_record_offset = 0x5f80;
-    static immutable wchar deletion_marker = 0;
-    static immutable int deletion_marker_offset = 0;
+    static immutable uint first_record_offset = 0x5f80; /// offset in binary codeplug
+    static immutable wchar deletion_marker = 0;         /// deletion marker
+    static immutable int deletion_marker_offset = 0;    /// deletion marker offset past first_record_offset
     bool empty() const @property {
         return (contact_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    /// field names for serialization
     static immutable string[] field_names =["contact_name",
                                             "contact_dmr_id",
                                             "call_type",
@@ -208,10 +218,10 @@ struct ContactInformation
         uint, "unknown_offset24",   2,  // 30-31 -- unknown (padding?)
     ));
 
-    wchar[16]   contact_name;           // 256 bits -> 32 octets -> 16 UTF16 codepoints
+    wchar[16]   contact_name;           /// 256 bits -> 32 octets -> 16 UTF16 codepoints
 }
 
-// rxgroups,fields_rxgroup.csv,250,60997,96,0,0,0
+/// rxgroups,fields_rxgroup.csv,250,60997,96,0,0,0
 struct RxGroup
 {
     static immutable uint first_record_offset = 0xec20;
@@ -221,13 +231,14 @@ struct RxGroup
         return (rxgroup_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    /// field names for serialization
     static immutable string[] field_names =["rxgroup_name", "contact_ids"];
 
-    wchar[16]   rxgroup_name;           // 256 bits -> 32 octets -> 16 UTF16 codepoints
-    ushort[32]  contact_ids;            // 512 bits = 32 * 16-bit contact id (lookup into contacts table)
+    wchar[16]   rxgroup_name;           /// 256 bits -> 32 octets -> 16 UTF16 codepoints
+    ushort[32]  contact_ids;            /// 512 bits = 32 * 16-bit contact id (lookup into contacts table)
 }
 
-// zones,fields_zone.csv,250,84997,64,0,0,0
+/// zones,fields_zone.csv,250,84997,64,0,0,0
 struct ZoneInfo
 {
     static immutable uint first_record_offset = 0x149e0;
@@ -237,13 +248,14 @@ struct ZoneInfo
         return (zone_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    /// field names for serialization
     static immutable string[] field_names =["zone_name", "channel_ids"];
 
-    wchar[16]   zone_name;                 // 256 bits / 32 octets
-    ushort[16]  channel_ids;
+    wchar[16]   zone_name;              /// 256 bits / 32 octets
+    ushort[16]  channel_ids;            /// 16 * 16-bit channel id (lookup into channels table)
 }
 
-// scanlists,fields_scanlist.csv,250,100997,104,0,0,0
+/// scanlists,fields_scanlist.csv,250,100997,104,0,0,0
 struct ScanList
 {
     static immutable uint first_record_offset = 0x18860;
@@ -253,6 +265,7 @@ struct ScanList
         return (scanlist_name[this.deletion_marker_offset] == this.deletion_marker);
     }
 
+    /// field names for serialization
     static immutable string[] field_names =["scanlist_name",
                                             "priority_channel1",
                                             "priority_channel2",
@@ -262,22 +275,22 @@ struct ScanList
                                             "priority_sample_time",
                                             "channel_ids"];
 
-    wchar[16]   scanlist_name;               // 32 octets
-    ushort      priority_channel1;  // offset: 256
-    ushort      priority_channel2;  // offset: 272
-    ushort      tx_channel;         // offset: 288
+    wchar[16]   scanlist_name;               /// 32 octets
+    ushort      priority_channel1;  /// offset: 256
+    ushort      priority_channel2;  /// offset: 272
+    ushort      tx_channel;         /// offset: 288
 
-    ubyte       unknown_offset304;  // offset: 304 -- padding?
+    ubyte       unknown_offset304;  /// offset: 304 -- padding?
 
-    ubyte       sign_hold_time;     // offset: 312
-    ubyte       priority_sample_time;//offset: 320
+    ubyte       sign_hold_time;     /// offset: 312
+    ubyte       priority_sample_time;///offset: 320
 
     // Yes, there are only 31 slots (not 32) in a scan list
-    ushort[31]  channel_ids;        // offset: 336
+    ushort[31]  channel_ids;        /// offset: 336
 }
 
 // TODO: fix bitfields
-// channels,fields_channel.csv,1000,127013,64,255,16,255
+/// channels,fields_channel.csv,1000,127013,64,255,16,255
 struct ChannelInformation
 {
     static immutable uint first_record_offset = 0x1EE00;
@@ -287,6 +300,7 @@ struct ChannelInformation
         return ((cast(ubyte*)&this)[deletion_marker_offset] == this.deletion_marker);
     }
 
+    /// field names for serialization
     static immutable string[] field_names =["channel_name",
 
                                             "channel_mode",
@@ -405,7 +419,7 @@ struct ChannelInformation
     ubyte unknown_offset40;             // 40-47
 
     // bytes 0x06-0x07
-    ushort contact_name_id;             // 48-63 -- refers to entry in contacts table
+    ushort contact_name_id;             /// 48-63 -- refers to entry in contacts table
     
     // byte 0x08
     mixin(bitfields!(
@@ -413,7 +427,7 @@ struct ChannelInformation
         uint, "unknown_offset64_65",2));// 64-65 -- unknown
 
     // byte 0x09
-    ubyte tot_rekey_delay;              // 72-79
+    ubyte tot_rekey_delay;              /// 72-79
 
     // byte 0x0a
     mixin(bitfields!(
@@ -436,12 +450,12 @@ struct ChannelInformation
     ubyte unknown_offset120;            // 120-127
 
     // bytes 0x10-0x13, 0x14-0x17 (32 bits each)
-    uint rx_frequency;                  // 128-159  -- BCD encoded
-    uint tx_frequency;                  // 160-191  -- BCD encoded
+    uint rx_frequency;                  /// 128-159  -- BCD encoded
+    uint tx_frequency;                  /// 160-191  -- BCD encoded
 
     // bytes 0x18-19, 0x1a-1b (16 bits each)
-    ushort ctcss_dcs_decode;            // 192-207  -- BCDT encoded
-    ushort ctcss_dcs_encode;            // 208-223  -- BCDT encoded
+    ushort ctcss_dcs_decode;            /// 192-207  -- BCDT encoded
+    ushort ctcss_dcs_encode;            /// 208-223  -- BCDT encoded
 
     // byte 0x1c
     mixin(bitfields!(
@@ -456,7 +470,7 @@ struct ChannelInformation
     // bytes 0x1e-1f
     ushort unknown_offset240_255;           // 240-255
     
-    // bytes 0x20-3f (wchar = 2 octets)
+    /// bytes 0x20-3f (wchar = 2 octets)
     wchar[16] channel_name;
 
     string toString() const {

@@ -28,7 +28,7 @@ class MD380CodeplugFile
     RadioSettings           settings;       /// Radio settings
     Table!TextMessage       textmessages;   /// Predefined text messages
     Table!ContactInformation contacts;      /// Contact list
-    Table!RxGroup           rxgroups;       /// RX groups (each a list of channels)
+    Table!RxGroup           rxgroups;       /// RX groups (each a list of contacts)
     Table!ZoneInfo          zones;          /// Zones (each a list of channels)
     Table!ScanList          scanlists;      /// Scanning lists (each a list of channels)
     Table!ChannelInformation channels;      /// Channel data
