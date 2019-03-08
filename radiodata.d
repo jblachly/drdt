@@ -161,11 +161,12 @@ string asCSVrow(S)(S s) // @suppress(dscanner.suspicious.unused_parameter)
     static foreach(fn; S.field_names) {
         // tr("\0", "", "d") is necessary to strip the NULL characters
         field = __traits(getMember, s, fn).to!string.tr("\0", "", "d");
+        // double-quote array fields
         if (field.indexOf(',') != -1)
             field = "\"" ~ field ~ "\"";
         row ~= field ~ ",";
     }
-    row = row[0 .. $-1];
+    row = row[0 .. $-1];    // remove terminal comma
     return row;
 }
 

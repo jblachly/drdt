@@ -610,10 +610,10 @@ struct RadioSettings
     static immutable uint first_record_offset = 0x2040;
     static immutable ubyte zero_value = 0xFF;
 
-    static string[int][string] lut;         // LUT: Lookup table
+    static string[int][string] lut;         /// LUT: Lookup table
     static string[string] description;
     static uint[string] min;                /// minimum value (zero if not otherwise specified)
-    static uint[string] max;                // maximum value
+    static uint[string] max;                /// maximum value
 
     alias fnptr = real function(uint data);
     static fnptr[string] transform_out;
@@ -649,7 +649,7 @@ struct RadioSettings
         description["scan_digital_hangtime"] = "Time in msec";
         description["scan_analog_hangtime"] = "Time in msec";
 
-        max["radio_dmr_id"] = 16776415;
+        max["radio_dmr_id"] = 16_776_415;
 
         max["tx_preamble"] = 8640;
 
