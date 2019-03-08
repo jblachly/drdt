@@ -79,6 +79,8 @@ class IntegerField : Field
         this.units = units;
     }
 }
+/// Binary-coded decimal -- little Endian
+// TODO: reverse BCD (ie big endian)
 class BCDField : Field
 {
     uint coded_value;
@@ -109,6 +111,24 @@ class BooleanField : Field
 
     this(string fn) {
         this.field_name = fn;
+    }
+}
+/// ascii password field; for PC programming password
+class PasswordField(int len) : Field
+{
+    byte[len] value;
+
+    this(string fn) {
+        this.field_name = fn;
+    }
+
+    /// remove password
+    void erase() {
+        foreach(ref c; this.value) c = 0xFF;
+    }
+    /// is paassword field empty ( defined as all 0xFF ) ?
+    @property bool empty() {
+
     }
 }
 
